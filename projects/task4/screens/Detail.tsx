@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ImageBackground,
+  Image,
 } from 'react-native';
 import FontAwesome from '@react-native-vector-icons/feather';
 import LinearGradient from 'react-native-linear-gradient';
@@ -134,7 +135,9 @@ const App = () => {
       </View>
       <View style={styles.detailTitle}>
         <View style={styles.country}>
-          <ImageBackground source={flagImage} style={styles.flag} />
+          <View style={styles.flagContainer}>
+            <Image source={flagImage} style={styles.flag} resizeMode="cover" />
+          </View>
           <Text style={styles.flagText}>{location}</Text>
         </View>
         <Text style={styles.detailTitleText}>
@@ -483,14 +486,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  flag: {
-    overflow: 'hidden',
+  flagContainer: {
     height: 16,
     width: 16,
     borderRadius: 8,
+    overflow: 'hidden',
+    marginRight: 6,
     borderWidth: 1,
     borderColor: '#000',
-    marginRight: 6,
+  },
+  flag: {
+    width: '100%',
+    height: '100%',
   },
   detailTitleText: {
     fontSize: 20,

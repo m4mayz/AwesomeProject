@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,25 @@ import {
   TouchableOpacity,
   TextInput,
   StatusBar,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import AwesomeIcon from 'react-native-vector-icons/FontAwesome';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+
+interface Destination {
+  id: string;
+  imageURL: string;
+  country: string;
+  name: string;
+  description: string;
+  temperature: number;
+  rating: number;
+  countryFlag: string;
+  price: number;
+}
 
 const DestinationCard = ({
   image,
@@ -24,6 +38,7 @@ const DestinationCard = ({
   description,
   temperature,
   flagImage,
+  onToggleFavorite,
 }: {
   image: any;
   location: string;
@@ -34,6 +49,7 @@ const DestinationCard = ({
   description?: string;
   temperature?: string;
   flagImage?: any;
+  onToggleFavorite?: () => void;
 }) => {
   const navigation = useNavigation();
 
@@ -48,6 +64,13 @@ const DestinationCard = ({
       temperature,
       flagImage,
     });
+  };
+
+  const handleFavoritePress = (e: any) => {
+    e.stopPropagation();
+    if (onToggleFavorite) {
+      onToggleFavorite();
+    }
   };
 
   return (
@@ -74,9 +97,12 @@ const DestinationCard = ({
           </View>
         </View>
       </LinearGradient>
-      <TouchableOpacity style={styles.favoriteIcon}>
+      <TouchableOpacity
+        style={styles.favoriteIcon}
+        onPress={handleFavoritePress}
+      >
         {favorite ? (
-          <AwesomeIcon name="heart" size={20} color="#fff" />
+          <AwesomeIcon name="heart" size={20} color="#FF6B4E" />
         ) : (
           <Icon name="heart" size={20} color="#fff" />
         )}
@@ -86,12 +112,72 @@ const DestinationCard = ({
 };
 
 const Home = () => {
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    fetchDestinations();
+  }, []);
+
+  const fetchDestinations = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        'https://68fafef094ec960660243e4d.mockapi.io/api/destination',
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch destinations');
+      }
+      const data = await response.json();
+      setDestinations(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching destinations:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchDestinations();
+    setRefreshing(false);
+  };
+
+  const toggleFavorite = (id: string) => {
+    setFavorites(prevFavorites => {
+      const newFavorites = new Set(prevFavorites);
+      if (newFavorites.has(id)) {
+        newFavorites.delete(id);
+      } else {
+        newFavorites.add(id);
+      }
+      return newFavorites;
+    });
+  };
+
+  const favoriteCount = favorites.size;
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#FF6B4E']}
+            tintColor="#FF6B4E"
+            title="Pull to refresh"
+            titleColor="#999"
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
@@ -101,7 +187,7 @@ const Home = () => {
           </View>
           <TouchableOpacity style={styles.notificationButton}>
             <AwesomeIcon name="heart" size={32} color="#FF6B4E" />
-            <Text style={styles.notificationBadge}>8</Text>
+            <Text style={styles.notificationBadge}>{favoriteCount}</Text>
           </TouchableOpacity>
         </View>
 
@@ -148,60 +234,44 @@ const Home = () => {
 
         {/* Destination Cards */}
         <View style={styles.cardsContainer}>
-          <DestinationCard
-            image={require('../../img/labuan.jpg')}
-            location="Indonesia"
-            name="Labuan Bajo"
-            price="$4.000/pax"
-            rating="5.0"
-            favorite={true}
-            description="From crystal-clear waters to breathtaking sunsets, Labuan Bajo is calling! Explore hidden islands, swim with manta rays, and create memories that last a lifetime"
-            temperature="24° C"
-            flagImage={require('../../img/flag.png')}
-          />
-          <DestinationCard
-            image={require('../../img/venice.jpg')}
-            location="Italia"
-            name="Venice"
-            price="$1.000/pax"
-            rating="4.7"
-            favorite={false}
-            description="Experience the romantic canals, stunning architecture, and rich culture of Venice. Glide through waterways on a gondola and discover the timeless beauty of this floating city."
-            temperature="22° C"
-            flagImage={{
-              uri: 'https://flagcdn.com/w40/it.png',
-            }}
-          />
-          <DestinationCard
-            image={{
-              uri: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?',
-            }}
-            location="Maldives"
-            name="Maldives"
-            price="$3.500/pax"
-            rating="4.9"
-            favorite={true}
-            description="Discover paradise in the Maldives with pristine beaches, turquoise waters, and luxurious overwater bungalows. Perfect for relaxation and underwater adventures."
-            temperature="28° C"
-            flagImage={{
-              uri: 'https://flagcdn.com/w40/mv.png',
-            }}
-          />
-          <DestinationCard
-            image={{
-              uri: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?',
-            }}
-            location="France"
-            name="Paris"
-            price="$2.200/pax"
-            rating="4.8"
-            favorite={false}
-            description="Fall in love with the City of Light! From the Eiffel Tower to charming cafés, Paris offers art, culture, and cuisine that will captivate your heart."
-            temperature="18° C"
-            flagImage={{
-              uri: 'https://flagcdn.com/w40/fr.png',
-            }}
-          />
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#FF6B4E" />
+              <Text style={styles.loadingText}>Loading destinations...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Icon name="alert-circle" size={48} color="#FF6B4E" />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={fetchDestinations}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : destinations.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Icon name="map" size={48} color="#999" />
+              <Text style={styles.emptyText}>No destinations found</Text>
+            </View>
+          ) : (
+            destinations.map(destination => (
+              <DestinationCard
+                key={destination.id}
+                image={{ uri: destination.imageURL }}
+                location={destination.country}
+                name={destination.name}
+                price={`$${destination.price.toLocaleString()}/pax`}
+                rating={destination.rating.toString()}
+                favorite={favorites.has(destination.id)}
+                description={destination.description}
+                temperature={`${destination.temperature}° C`}
+                flagImage={{ uri: destination.countryFlag }}
+                onToggleFavorite={() => toggleFavorite(destination.id)}
+              />
+            ))
+          )}
         </View>
       </ScrollView>
     </View>
@@ -410,6 +480,52 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#999',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#FF6B4E',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: '#FF6B4E',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#999',
   },
 });
 

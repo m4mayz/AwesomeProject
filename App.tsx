@@ -4,6 +4,8 @@ import AppNavigator from './projects/task4/navigation/AppNavigator';
 // import HomeScreen from './projects/homeScreen';
 // import DetailPage from './projects/DetailPage';
 
+// import TestApp from './src/App';
+
 const App = () => {
   return (
     <NavigationContainer>
@@ -11,4 +13,5 @@ const App = () => {
     </NavigationContainer>
   );
 };
+
 export default App;
