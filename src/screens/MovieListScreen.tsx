@@ -7,14 +7,16 @@ import {
   RefreshControl,
   StyleSheet,
 } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getFilms, Film } from '../api/data';
 import MovieCard from '../components/MovieCard';
 import type { RootStackParamList } from '../App';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'MovieList'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-export default function MovieListScreen({ navigation }: Props) {
+export default function MovieListScreen() {
+  const navigation = useNavigation<NavigationProp>();
   const [data, setData] = useState<Film[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,30 +64,39 @@ export default function MovieListScreen({ navigation }: Props) {
   }
 
   return (
-    <FlatList
-      contentContainerStyle={{ paddingVertical: 8 }}
-      data={data}
-      keyExtractor={item => item.id}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      renderItem={({ item }) => (
-        <MovieCard
-          film={item}
-          onPress={() =>
-            navigation.navigate('MovieDetail', {
-              id: item.id,
-              title: item.title,
-            })
-          }
-        />
-      )}
-      ListHeaderComponent={<Text style={styles.header}>Top Movies</Text>}
-    />
+    <View style={styles.container}>
+      <FlatList
+        contentContainerStyle={styles.list}
+        data={data}
+        keyExtractor={item => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        renderItem={({ item }) => (
+          <MovieCard
+            film={item}
+            onPress={() =>
+              navigation.navigate('MovieDetail', {
+                id: item.id,
+                title: item.title,
+              })
+            }
+          />
+        )}
+        ListHeaderComponent={<Text style={styles.header}>Top Movies</Text>}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  list: {
+    paddingVertical: 8,
+  },
   center: {
     flex: 1,
     justifyContent: 'center',

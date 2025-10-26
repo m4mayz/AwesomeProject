@@ -1,20 +1,43 @@
 export type Music = {
-  id: string;
-  title: string;
-  artist: string;
-  year: number;
+  _id: string;
+  name: string;
+  artist?: string;
+  uId?: string;
+  uNm?: string;
+  eId?: string;
+  pl?: {
+    id: number;
+    name: string;
+  } | null;
+  img?: string;
+  trackUrl?: string;
+  score?: number;
+  text?: string;
+  nbP?: number;
+  nbR?: number;
+  lov?: string[];
+  comments?: any[];
+  reposts?: any[];
 };
+
+type MusicResponse = {
+  hasMore?: {
+    skip: number;
+  };
+  tracks: Music[];
+};
+
 export async function getMusicList(): Promise<Music[]> {
-  const res = await fetch(
-    `https://68fafef094ec960660243e4d.mockapi.io/api/music`,
-  );
+  const res = await fetch(`https://openwhyd.org/hot/electro?format=json`);
   if (!res.ok) throw new Error('Failed to fetch music list');
-  return res.json();
+  const data: MusicResponse = await res.json();
+  return data.tracks || [];
 }
-export async function getMusicById(id: string): Promise<Music> {
-  const res = await fetch(
-    `https://68fafef094ec960660243e4d.mockapi.io/api/music/${id}`,
-  );
-  if (!res.ok) throw new Error('Failed to fetch music');
-  return res.json();
+
+export async function getMusicById(_id: string): Promise<Music> {
+  const res = await fetch(`https://openwhyd.org/c/${_id}?format=json`);
+  if (!res.ok) throw new Error('Failed to fetch music detail');
+  const response = await res.json();
+  // API returns { data: { ...musicData } }
+  return response.data || response;
 }
