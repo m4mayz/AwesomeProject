@@ -4,12 +4,12 @@ import React from 'react';
 // import HomeScreen from './projects/homeScreen';
 // import DetailPage from './projects/DetailPage';
 
-import TestApp from './src/App';
+import WeddingInvitation from './src/WeddingInvitation';
 
 const App = () => {
   return (
     // <NavigationContainer>
-    <TestApp />
+    <WeddingInvitation />
     // </NavigationContainer>
   );
 };
